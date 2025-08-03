@@ -1,0 +1,153 @@
+services:
+  rabbitmq:
+    build: ./rabbitmq
+    ports:
+      - "5672:5672"  # AMQP
+      - "15672:15672"  # Web UI
+    networks:
+      - devops7
+    # healthcheck:
+    #   test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    environment:
+      - RABBITMQ_DEFAULT_USER=postgres
+      - RABBITMQ_DEFAULT_PASS=master
+
+  database:
+    build: ./database
+    environment:
+      # Задаем переменные окружения для базы данных
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=master
+      - POSTGRES_MULTIPLE_DATABASES="users_db,hotels_db,reservations_db,payments_db,balances_db,statistics_db"
+    ports:
+       - "5432:5432"
+    volumes:
+       - postgres_data:/var/lib/postgresql/data
+    networks:
+       - devops7
+
+  session-service:
+    build: ./session-service
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=master
+      - POSTGRES_DB=users_db
+    networks:
+      - devops7
+    ports:
+      - "8081:8081"
+  
+  hotel-service:
+    build: ./hotel-service
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=master
+      - POSTGRES_DB=hotels_db
+    networks:
+      - devops7
+    ports:
+      - "8082:8082"
+
+  payment-service:
+    build: ./payment-service
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=master
+      - POSTGRES_DB=payments_db
+    networks:
+      - devops7
+    ports:
+      - "8084:8084"
+
+  loyalty-service:
+    build: ./loyalty-service
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=master
+      - POSTGRES_DB=balances_db
+    networks:
+      - devops7
+    ports:
+      - "8085:8085"
+  
+  report-service:
+    build: ./report-service
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=master
+      - POSTGRES_DB=statistics_db
+      - RABBIT_MQ_HOST=rabbitmq
+      - RABBIT_MQ_PORT=5672
+      - RABBIT_MQ_USER=postgres
+      - RABBIT_MQ_PASSWORD=master
+      - RABBIT_MQ_QUEUE_NAME=messagequeue
+      - RABBIT_MQ_EXCHANGE=messagequeue-exchange
+    networks:
+      - devops7
+    ports:
+      - "8086:8086"
+      
+  booking-service:
+    build: ./booking-service
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=master
+      - POSTGRES_DB=reservations_db
+      - RABBIT_MQ_HOST=rabbitmq
+      - RABBIT_MQ_PORT=5672
+      - RABBIT_MQ_USER=postgres
+      - RABBIT_MQ_PASSWORD=master
+      - RABBIT_MQ_QUEUE_NAME=messagequeue
+      - RABBIT_MQ_EXCHANGE=messagequeue-exchange
+      - HOTEL_SERVICE_HOST=hotel-service
+      - HOTEL_SERVICE_PORT=8082
+      - PAYMENT_SERVICE_HOST=payment-service
+      - PAYMENT_SERVICE_PORT=8084
+      - LOYALTY_SERVICE_HOST=loyalty-service
+      - LOYALTY_SERVICE_PORT=8085
+    networks:
+      - devops7
+    ports:
+      - "8083:8083"
+
+  gateway-service:
+    build: ./gateway-service
+    environment:
+      - SESSION_SERVICE_HOST=session-service
+      - SESSION_SERVICE_PORT=8081
+      - HOTEL_SERVICE_HOST=hotel-service
+      - HOTEL_SERVICE_PORT=8082
+      - BOOKING_SERVICE_HOST=booking-service
+      - BOOKING_SERVICE_PORT=8083
+      - PAYMENT_SERVICE_HOST=payment-service
+      - PAYMENT_SERVICE_PORT=8084
+      - LOYALTY_SERVICE_HOST=loyalty-service
+      - LOYALTY_SERVICE_PORT=8085
+      - REPORT_SERVICE_HOST=report-service
+      - REPORT_SERVICE_PORT=8086
+    networks:
+      - devops7
+    ports:
+      - "8087:8087"
+
+volumes:
+  postgres_data:
+  
+networks:
+  devops7:
+    driver: bridge
