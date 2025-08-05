@@ -39,7 +39,7 @@ RUN set -eux; \
 EXPOSE 15671 15672
 ```
 изменяю порты с 15671 15672 на 5671 5672 </br>
-![rabbitmq](/images/part1/rabbitmq/Dockerfile.png)
+![rabbitmq](./images/part1/rabbitmq/Dockerfile.png)
  
 Создаю файл docker-compose и делаю запись для этого сервиса. Создаю сеть docker7 для проекта в docker-compose.yml.
 ```
@@ -57,16 +57,16 @@ networks:  # внутренняя сеть для всего проекта
 ```
 
 
-![rabbitmq](/images/part1/rabbitmq/docker-compose.png) </br>
+![rabbitmq](./images/part1/rabbitmq/docker-compose.png) </br>
 проверяю создается ли образ и контейнер 
 ```
 docker-compose up --build -d rabbitmq
 docker images
 docker ps
 ```
-![rabbitmq](/images/part1/rabbitmq/docker-compose_up.png) <br>
-![rabbitmq](/images/part1/rabbitmq/docker_images.png) <br>
-![rabbitmq](/images/part1/rabbitmq/docker_ps.png) <br>
+![rabbitmq](./images/part1/rabbitmq/docker-compose_up.png) <br>
+![rabbitmq](./images/part1/rabbitmq/docker_images.png) <br>
+![rabbitmq](./images/part1/rabbitmq/docker_ps.png) <br>
 
 ******
 ## **_database_**
@@ -84,7 +84,7 @@ RUN chmod 644 /docker-entrypoint-initdb.d/init.sql
 # Открываю порт 5432 для подключения к базе данных
 EXPOSE 5432
 ```
-![database_psql](/images/part1/datatbase/Dockerfile.png) </br>
+![database_psql](./images/part1/datatbase/Dockerfile.png) </br>
 Добавлю необходимые строки в docker-compose,
 кроме этого создам внутреннюю сеть docker и общее пространство для работы с базами
 все переменные буду включать в docker-compose.yml так как их проще менять без пересборки образа, если их указать в Dockerfile нужно будет пересобирать образ, что-бы их поменять. </br>
@@ -111,7 +111,7 @@ networks:
   devops7:
     driver: bridge
 ```
-</br> ![database_psql](/images/part1/datatbase/docker-compose.png) </br>
+</br> ![database_psql](./images/part1/datatbase/docker-compose.png) </br>
 
 Создаю образ и запускаю контейнер с базой данных.
 ```
@@ -119,12 +119,12 @@ docker-compose up --build -d database
 docker images
 docker ps </br>
 ```
-</br> ![database_psql](/images/part1/datatbase/docker-compose_up.png) </br>
-</br> ![database_psql](/images/part1/datatbase/docker_images.png) </br>
-</br> ![database_psql](/images/part1/datatbase/docker_ps.png) </br>
+</br> ![database_psql](./images/part1/datatbase/docker-compose_up.png) </br>
+</br> ![database_psql](./images/part1/datatbase/docker_images.png) </br>
+</br> ![database_psql](./images/part1/datatbase/docker_ps.png) </br>
 
 проверяю работает ли база данных, сведения о созданных базах можно увидеть в файле init.sql
-</br> ![database_psql](/images/part1/datatbase/docker_exec_psql.png)
+</br> ![database_psql](./images/part1/datatbase/docker_exec_psql.png)
 
 вижу ответ, следовательно, моя база запущена и создан пользователь postgres
 </br>
@@ -133,8 +133,8 @@ docker ps </br>
 ## **_session-service_**
 
 Создаю `/session/Dockerfile` для сервиса `session-service`. Нужно отметить, что столкнулся с ошибкой, которая возникала из-за неправинлього определения переменной MAVEN_CONFIG </br>
-![session-service/error](/images/part1/session-service/ERROR_MAVEN_CONFIG.png) </br>
-![session-service/error](/images/part1/session-service/ERROR_root.png) </br>
+![session-service/error](./images/part1/session-service/ERROR_MAVEN_CONFIG.png) </br>
+![session-service/error](./images/part1/session-service/ERROR_root.png) </br>
 В итоге, решил проблему заново переопределив эту переменную в Dockerfile и задав ей пустое значение
 
 ```
@@ -160,7 +160,7 @@ RUN chmod +x wait-for-it.sh
 EXPOSE 8081
 CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--", "java", "-jar", "app.jar"]
 ``` 
-![session-service/Dockerfile](/images/part1/session-service/Dockerfile.png) </br>
+![session-service/Dockerfile](./images/part1/session-service/Dockerfile.png) </br>
 
 
 Вножу запись в docker-compose.yml
@@ -178,7 +178,7 @@ CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--",
     ports:
       - "8081:8081"
 ```
-![session-service/docker-compose](/images/part1/session-service/docker-compose.png) </br>
+![session-service/docker-compose](./images/part1/session-service/docker-compose.png) </br>
 
 Создаю образ и запускаю контейнер с сервисом.
 ```
@@ -186,15 +186,15 @@ docker-compose up --build -в session-service
 docker images
 docker ps
 ```
-![session-service/docker-compose_up](/images/part1/session-service/docker-compose_up.png) </br>
-![session-service/docker_images](/images/part1/session-service/docker_images.png) </br>
-![session-service/docker_ps](/images/part1/session-service/docker_ps.png) </br>
+![session-service/docker-compose_up](./images/part1/session-service/docker-compose_up.png) </br>
+![session-service/docker_images](./images/part1/session-service/docker_images.png) </br>
+![session-service/docker_ps](./images/part1/session-service/docker_ps.png) </br>
 
 Проверяю подключился ли сервис к базе данных </br>
-![session-service/docker-compose_exec_psql](/images/part1/session-service/docker-compose_exec_psql.png) </br>
+![session-service/docker-compose_exec_psql](./images/part1/session-service/docker-compose_exec_psql.png) </br>
 
 Получаю ответ. Вижу, что подключение создано, дополнительно проверяю версию java </br>  
-![session-service/docker-compose_exec_psql](/images/part1/session-service/docker_exec_java_version.png) </br>
+![session-service/docker-compose_exec_psql](./images/part1/session-service/docker_exec_java_version.png) </br>
 
 
 ******
@@ -228,7 +228,7 @@ EXPOSE 8082
 CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--", "java", "-jar", "app.jar"]
 
 ```
- ![hotel-service/Dockerfile](/images/part1/hotel-service/Dockerfile.png) </br>
+ ![hotel-service/Dockerfile](./images/part1/hotel-service/Dockerfile.png) </br>
 
 Делаю запись в docker-compose.yml 
 ```
@@ -246,7 +246,7 @@ CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--",
       - "8082:8082"
 ```
 
-![hotel-service/docker-compose](/images/part1/hotel-service/docker-compose.png) </br>
+![hotel-service/docker-compose](./images/part1/hotel-service/docker-compose.png) </br>
 
 Создаю образ и запускаю контейнер с сервисом. Проверяю его создание и проверяю запущен ли JDK. </br>
 ```
@@ -254,13 +254,13 @@ docker-compose up --build -в hotel-service
 docker images
 docker ps
 ```
-![hotel-service/docker-compose_up](/images/part1/hotel-service/docker-compose_up.png) </br>
-![hotel-service/docker_images](/images/part1/hotel-service/docker_images.png) </br>
-![hotel-service/docker_ps](/images/part1/hotel-service/docker_ps.png) </br>
+![hotel-service/docker-compose_up](./images/part1/hotel-service/docker-compose_up.png) </br>
+![hotel-service/docker_images](./images/part1/hotel-service/docker_images.png) </br>
+![hotel-service/docker_ps](./images/part1/hotel-service/docker_ps.png) </br>
 
 Проверяю версию java</br>
 
-![hotel-service/](/images/part1/hotel-service/docker_exec_version.png) </br>
+![hotel-service/](./images/part1/hotel-service/docker_exec_version.png) </br>
 
 ******
 ## **_booking-service_**
@@ -268,7 +268,7 @@ docker ps
 Создаю Dockerfile для `booking-service`. При работе с этим сервисом столкнулся с ошибкой </br> 
 SpringApplication требовала наличие субдиректорий в папке config/*/. Решили ошибку костылем, взял решение в интернете на stackoverflow путем добавления рандомной субдиректории Директивой `RUN mkdir -p  /app/config/*/empty_subdir` в Dockerfile
 
-![booking-service/ERROR](/images/part1/booking-service/ERROR_conf_subdir.png)
+![booking-service/ERROR](./images/part1/booking-service/ERROR_conf_subdir.png)
 
 ```
 # booking-service/Dockerfile
@@ -295,7 +295,7 @@ RUN chmod +x wait-for-it.sh
 EXPOSE 8083
 CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--", "java", "-jar", "app.jar"]
 ```
-![booking-service/Dockerfile](/images/part1/booking-service/Dockerfile.png)
+![booking-service/Dockerfile](./images/part1/booking-service/Dockerfile.png)
 
 ```
   booking-service:
@@ -324,7 +324,7 @@ CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--",
       - "8083:8083"
 ```
 
-![booking-service/docker-compose](/images/part1/booking-service/docker-compose.png)
+![booking-service/docker-compose](./images/part1/booking-service/docker-compose.png)
 
 Создаю образ и запускаю контейнер с сервисом. роверяю его создание и проверяю запущен ли JDK.
 ```
@@ -334,10 +334,10 @@ docker ps
 docker exec services_payment-service_1 java -version
 ```
 
-![booking-service/docker-compose_up](/images/part1/booking-service/docker-compose_up.png) </br>
-![booking-service/docker_images](/images/part1/booking-service/docker_images.png) </br>
-![booking-service/docker_ps](/images/part1/booking-service/docker_ps.png) </br>
-![booking-service/docker_exec_java_version](/images/part1/booking-service/docker_exec_java_version.png) </br>
+![booking-service/docker-compose_up](./images/part1/booking-service/docker-compose_up.png) </br>
+![booking-service/docker_images](./images/part1/booking-service/docker_images.png) </br>
+![booking-service/docker_ps](./images/part1/booking-service/docker_ps.png) </br>
+![booking-service/docker_exec_java_version](./images/part1/booking-service/docker_exec_java_version.png) </br>
 
 
 ******
@@ -371,7 +371,7 @@ EXPOSE 8084
 CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--", "java", "-jar", "app.jar"]
 ```
 
-![payment-service/Dockerfile](/images/part1/payment-service/Dockerfile.png)
+![payment-service/Dockerfile](./images/part1/payment-service/Dockerfile.png)
 
 `docker-compose.yml`
 
@@ -389,7 +389,7 @@ CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--",
     ports:
       - "8084:8084"
 ```
-![payment-service/docker-compose](/images/part1/payment-service/docker-compose.png) </br>
+![payment-service/docker-compose](./images/part1/payment-service/docker-compose.png) </br>
 
 Создаю образ и запускаю контейнер с сервисом, проверяю его создание и проверяю запущен ли JDK. </br>
 ```
@@ -398,10 +398,10 @@ docker images
 docker ps
 docker exec services_payment-service_1 java -version
 ```
-![payment-service/](/images/part1/payment-service/docker-compose_up.png) </br>
-![payment-service/](/images/part1/payment-service/docker_images.png) </br>
-![payment-service/](/images/part1/payment-service/docker_ps.png) </br>
-![payment-service/](/images/part1/payment-service/docker_exec_java_version.png) </br>
+![payment-service/](./images/part1/payment-service/docker-compose_up.png) </br>
+![payment-service/](./images/part1/payment-service/docker_images.png) </br>
+![payment-service/](./images/part1/payment-service/docker_ps.png) </br>
+![payment-service/](./images/part1/payment-service/docker_exec_java_version.png) </br>
 
 ******
 ## **_loyalty-service_**
@@ -433,7 +433,7 @@ RUN chmod +x wait-for-it.sh
 EXPOSE 8085
 CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--", "java", "-jar", "app.jar"]
 ```
-![loyalty-service/Dockerfile](/images/part1/loyalty-service/Dockerfile.png) </br>
+![loyalty-service/Dockerfile](./images/part1/loyalty-service/Dockerfile.png) </br>
 `docker-compose`
 ```
   loyalty-service:
@@ -449,7 +449,7 @@ CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--",
     ports:
       - "8085:8085"
 ```
-![loyalty-service/docker-compose](/images/part1/loyalty-service/docker-compose.png) </br>
+![loyalty-service/docker-compose](./images/part1/loyalty-service/docker-compose.png) </br>
 
 Создаю образ и запускаю контейнер с сервисом, проверяю его создание и проверяю запущен ли JDK.
 ```
@@ -458,10 +458,10 @@ docker images
 docker ps
 docker exec services_payment-service_1 java -version
 ```
-![loyalty-service/docker-compose_up](/images/part1/loyalty-service/docker-compose_up.png) </br>
-![loyalty-service/docker_images](/images/part1/loyalty-service/docker_images.png) </br>
-![loyalty-service/docker_ps](/images/part1/loyalty-service/docker_ps.png) </br>
-![loyalty-service/docker_exec_java_version](/images/part1/loyalty-service/docker_exec_java_version.png) </br>
+![loyalty-service/docker-compose_up](./images/part1/loyalty-service/docker-compose_up.png) </br>
+![loyalty-service/docker_images](./images/part1/loyalty-service/docker_images.png) </br>
+![loyalty-service/docker_ps](./images/part1/loyalty-service/docker_ps.png) </br>
+![loyalty-service/docker_exec_java_version](./images/part1/loyalty-service/docker_exec_java_version.png) </br>
 
 ******
 ## **_report-service_**
@@ -493,7 +493,7 @@ RUN chmod +x wait-for-it.sh
 EXPOSE 8086
 CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--", "java", "-jar", "app.jar"]
 ```
-![report-service/Dockerfile](/images/part1/report-service/Dockerfile.png)
+![report-service/Dockerfile](./images/part1/report-service/Dockerfile.png)
 
 `docker-compose.yml`
 
@@ -517,7 +517,7 @@ CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--",
     ports:
       - "8086:8086"
 ```
-![report-service/docker-compose](/images/part1/report-service/docker-compose.png)
+![report-service/docker-compose](./images/part1/report-service/docker-compose.png)
 
 Создаю образ и запускаю контейнер с сервисом, проверяю его создание и проверяю запущен ли JDK.
 ```
@@ -527,10 +527,10 @@ docker ps
 docker exec services_payment-service_1 java -version
 ```
 
-![report-service/docker-compose_up](/images/part1/report-service/docker-compose_up.png) </br>
-![report-service/docker_images](/images/part1/report-service/docker_images.png) </br>
-![report-service/docker_ps](/images/part1/report-service/docker_ps.png) </br>
-![report-service/docker_exec_java_version](/images/part1/report-service/docker_exec_java_version.png) </br>
+![report-service/docker-compose_up](./images/part1/report-service/docker-compose_up.png) </br>
+![report-service/docker_images](./images/part1/report-service/docker_images.png) </br>
+![report-service/docker_ps](./images/part1/report-service/docker_ps.png) </br>
+![report-service/docker_exec_java_version](./images/part1/report-service/docker_exec_java_version.png) </br>
 
 
 ******
@@ -563,7 +563,7 @@ RUN chmod +x wait-for-it.sh
 EXPOSE 8087
 CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--", "java", "-jar", "app.jar"]
 ```
-![gateway-service/Dockerfile](/images/part1/gateway-service/Dockerfile.png)
+![gateway-service/Dockerfile](./images/part1/gateway-service/Dockerfile.png)
 
 
 `docker-compose.yml`
@@ -590,7 +590,7 @@ CMD ["./wait-for-it.sh", "database:5432", "rabbitmq:5672", "--timeout=60", "--",
 
 ```
 
-![gateway-service/docker-compose](/images/part1/gateway-service/docker-compose.png)
+![gateway-service/docker-compose](./images/part1/gateway-service/docker-compose.png)
 
 Создаю образ и запускаю контейнер с сервисом, проверяю его создание и проверяю запущен ли JDK.
 ```
@@ -599,10 +599,10 @@ docker images
 docker ps
 docker exec services_payment-service_1 java -version
 ```
-![gateway-service/docker-compose_up](/images/part1/gateway-service/docker-compose_up.png) </br>
-![gateway-service/docker_images](/images/part1/gateway-service/docker_images.png) </br>
-![gateway-service/docker_ps](/images/part1/gateway-service/docker_ps.png) </br>
-![gateway-service/docker_exec_java_version](/images/part1/gateway-service/docker_exec_java_version.png) </br>
+![gateway-service/docker-compose_up](./images/part1/gateway-service/docker-compose_up.png) </br>
+![gateway-service/docker_images](./images/part1/gateway-service/docker_images.png) </br>
+![gateway-service/docker_ps](./images/part1/gateway-service/docker_ps.png) </br>
+![gateway-service/docker_exec_java_version](./images/part1/gateway-service/docker_exec_java_version.png) </br>
 
 
 ******
@@ -610,14 +610,14 @@ docker exec services_payment-service_1 java -version
 
 Проверяю собранные образы 
 
-![run-service](/images/part1/run-service/docker_images.png) </br>
+![run-service](./images/part1/run-service/docker_images.png) </br>
 
 ```
 docker-compose up -d
 docker ps
 ```
-![run-service](/images/part1/run-service/docker-compose_up.png) </br>
-![run-service](/images/part1/run-service/docker_ps.png) </br>
+![run-service](./images/part1/run-service/docker-compose_up.png) </br>
+![run-service](./images/part1/run-service/docker_ps.png) </br>
 
 Видно, что контейнеры запустились, работают стабильно. 
 Приступаю к тестированию
@@ -628,33 +628,43 @@ docker ps
 
 Устанавливаю `Postman` и `Postman Agent` на машину. </br>
 
-![test-service](/images/part1/test-service/web_postman.png) </br>
-![test-service](/images/part1/test-service/download.png) </br>
-# **Postman**        ![test-service](/images/part1/test-service/postman.png) </br>
-# **Postman Agent**  ![test-service](/images/part1/test-service/postman_agent.png) </br>
+![test-service](./images/part1/test-service/web_postman.png) </br>
+![test-service](./images/part1/test-service/download.png) </br>
+# **Postman**        ![test-service](./images/part1/test-service/postman.png) </br>
+# **Postman Agent**  ![test-service](./images/part1/test-service/postman_agent.png) </br>
 
 В папке src лежит файл `application_tests.postman_collection.json`
 Он нужен для проведения тестов
 После регистрации в Postman, вхожу в панель тестирования, импортирую файл с тестами </br>
-![test-service](/images/part1/test/import_tests.png) </br>
+![test-service](./images/part1/test/import_tests.png) </br>
 Красным обозначена кнопка импорта, синим импортированные тесты. </br>
 
 Провожу тестирование:
 
 `GET login user` </br>
-![test-service](/images/part1/test-service/GET_login_user.png) </br>
+![test-service](./images/part1/test-service/GET_login_user.png) </br>
 
 `GET Get hotels` </br>
-![test-service](/images/part1/test-service/GET_get_hotels.png) </br>
+![test-service](./images/part1/test-service/GET_get_hotels.png) </br>
 
 `GET hotel` </br>
-![test-service](/images/part1/test-service/GET_hotel.png) </br>
+![test-service](./images/part1/test-service/GET_hotel.png) </br>
 
 `POST book hotel` </br>
-![test-service](/images/part1/test-service/POST_book_hotel.png) </br>
+![test-service](./images/part1/test-service/POST_book_hotel.png) </br>
 
 `GET user loyalty` </br>
-![test-service](/images/part1/test-service/GET_user_loyalty.png) </br>
+![test-service](./images/part1/test-service/GET_user_loyalty.png) </br>
 
 Все тесты прошли успешно на запросы пришли ответы 200 и 201.
 На этом первая часть задания все, закончилась.
+
+## Part 2. Создание виртуальных машин
+
+Пришло время заготовить основу для будущих узлов кластера. Создадим виртуальную машину.
+
+### Задание 
+
+1) Установи и инициализируй Vagrant в корне проекта. Напиши Vagrantfile для одной виртуальной машины. Перенеси исходный код веб-сервиса в рабочую директорию виртуальной машины. Помощь по vagrant ты найдешь в материалах.
+
+2) Зайди через консоль внутрь виртуальной машины и удостоверься, что исходный код встал, куда нужно. Останови и уничтожь виртуальную машину.
