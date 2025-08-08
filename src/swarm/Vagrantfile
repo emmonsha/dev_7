@@ -8,6 +8,9 @@ nodes = [
 ]
 
 Vagrant.configure("2") do |config|
+
+
+  # config.vm.boot_timeout = 300
   # vagrant-hostmanager options
   config.hostmanager.enabled = true
   config.hostmanager.manage_host = true
@@ -20,12 +23,12 @@ Vagrant.configure("2") do |config|
   config.ssh.forward_agent = true
   # Vagrant box
 #   config.vm.box = "bento/ubuntu-18.04"
-  config.vm.box = "gyptazy/ubuntu24.04-server-arm64"
-  config.vm.box_version = "1.0.0"
+  config.vm.box = "hashicorp-education/ubuntu-24-04"
+  config.vm.box_version = "0.1.0"
   # Docker
 #   config.vm.provision "docker"
   # Synced Folder
-  config.vm.synced_folder '.', '/vagrant', disabled: true
+  config.vm.synced_folder '.', '/vagrant'
 
   # Provision nodes
   nodes.each do |node|
@@ -34,7 +37,7 @@ Vagrant.configure("2") do |config|
       config.vm.network :private_network, ip: node[:ip]
 
       memory = node[:ram] ? node[:ram] : 2048;
-      cpus = node[:cpus] ? node[:cpus] : 1;
+      cpus = node[:cpus] ? node[:cpus] : 2;
 
       config.vm.provider :virtualbox do |vb|
         vb.customize [
@@ -42,17 +45,32 @@ Vagrant.configure("2") do |config|
           "--memory", memory.to_s,
           "--cpus", cpus.to_s
         ]
+      end 
+      config.vm.provision :shell, path: "install.sh"
+
+          # Provision manager01 using docker swarm init after the last VM is booted.
+      if node[:hostname] == "manager01"
+        config.vm.provision "shell", inline: <<-SHELL
+          sudo timedatectl set-ntp true
+          sudo usermod -aG docker $USER
+          # sudo reboot
+          docker swarm init --advertise-addr #{node[:ip]}:2377 --data-path-addr #{node[:ip]}
+          echo "#{node[:ip]}" > /vagrant/manager01ip.txt
+          docker swarm join-token -q worker > /vagrant/swarm_token.txt
+          SHELL
       end
 
-      # Provision both VMs using Ansible after the last VM is booted.
-    #   if node[:hostname] == "swarm-worker-2"
-    #     config.vm.provision "ansible" do |ansible|
-    #       ansible.compatibility_mode = "2.0"
-    #       ansible.playbook = "ansible/playbook.yml"
-    #       ansible.inventory_path = "ansible/inventory"
-    #       ansible.limit = "all"
-    #     end
+      if node[:hostname].start_with?("worker0")
+        config.vm.provision "shell", inline: <<-SHELL
+        sudo timedatectl set-ntp true
+        sudo usermod -aG docker $USER
+        MANAGER_IP=$(cat /vagrant/manager01ip.txt)
+        WORKER_TOKEN=$(cat /vagrant/swarm_token.txt)  # Read from shared file
+        echo "$WORKER_TOKEN"
+        docker swarm join --advertise-addr #{node[:ip]} --listen-addr #{node[:ip]}:2377 --token $WORKER_TOKEN $MANAGER_IP:2377
+        SHELL
       end
     end
   end
 end
+
