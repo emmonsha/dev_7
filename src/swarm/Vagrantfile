@@ -8,9 +8,7 @@ nodes = [
 ]
 
 Vagrant.configure("2") do |config|
-
-
-  # config.vm.boot_timeout = 300
+ 
   # vagrant-hostmanager options
   config.hostmanager.enabled = true
   config.hostmanager.manage_host = true
@@ -25,6 +23,7 @@ Vagrant.configure("2") do |config|
 #   config.vm.box = "bento/ubuntu-18.04"
   config.vm.box = "hashicorp-education/ubuntu-24-04"
   config.vm.box_version = "0.1.0"
+
   # Docker
 #   config.vm.provision "docker"
   # Synced Folder
@@ -35,6 +34,7 @@ Vagrant.configure("2") do |config|
     config.vm.define node[:hostname] do |config|
       config.vm.hostname = node[:hostname]
       config.vm.network :private_network, ip: node[:ip]
+      
 
       memory = node[:ram] ? node[:ram] : 2048;
       cpus = node[:cpus] ? node[:cpus] : 2;
@@ -46,27 +46,35 @@ Vagrant.configure("2") do |config|
           "--cpus", cpus.to_s
         ]
       end 
-      config.vm.provision :shell, path: "install.sh"
-
+      config.vm.provision :shell, run: "always", path: "install.sh"
           # Provision manager01 using docker swarm init after the last VM is booted.
       if node[:hostname] == "manager01"
-        config.vm.provision "shell", inline: <<-SHELL
+        config.vm.network "forwarded_port", guest: 80, host: 8080
+        config.vm.provision "shell", run: "always", inline: <<-SHELL
           sudo timedatectl set-ntp true
           sudo usermod -aG docker $USER
-          # sudo reboot
-          docker swarm init --advertise-addr #{node[:ip]}:2377 --data-path-addr #{node[:ip]}
-          echo "#{node[:ip]}" > /vagrant/manager01ip.txt
-          docker swarm join-token -q worker > /vagrant/swarm_token.txt
+          # sudo /vagrant/init_swarm_daemon.sh manager #{node[:ip]} | tee /var/log/swarm_init.log
+          docker swarm leave --force
+          docker system prune -a --volumes --filter "label!=com.docker.stack.namespace"
+          if ! docker node ls &>/dev/null; then 
+            docker swarm init --advertise-addr #{node[:ip]}:2377
+            echo "#{node[:ip]}" > /vagrant/manager01ip.txt
+            cat /vagrant/swarm_token.txt
+            docker swarm join-token -q worker > /vagrant/swarm_token.txt
+          fi
           SHELL
       end
 
       if node[:hostname].start_with?("worker0")
-        config.vm.provision "shell", inline: <<-SHELL
+        config.vm.provision "shell", run: "always", inline: <<-SHELL
         sudo timedatectl set-ntp true
         sudo usermod -aG docker $USER
         MANAGER_IP=$(cat /vagrant/manager01ip.txt)
         WORKER_TOKEN=$(cat /vagrant/swarm_token.txt)  # Read from shared file
         echo "$WORKER_TOKEN"
+        # sudo /vagrant/init_swarm_daemon.sh worker "$MANAGER_IP" | tee /var/log/swarm_init.log
+        docker swarm leave
+        docker system prune -a --volumes --filter "label!=com.docker.stack.namespace"
         docker swarm join --advertise-addr #{node[:ip]} --listen-addr #{node[:ip]}:2377 --token $WORKER_TOKEN $MANAGER_IP:2377
         SHELL
       end

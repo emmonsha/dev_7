@@ -1,9 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ===============
 # INSTALL DOCKER 
 # ===============
 export DEBIAN_FRONTEND=noninteractive
+if docker --version; then 
+  echo "docker is already installed"
+  exit 0
+fi
+
 sudo apt-get update -y -qq
 sudo apt-get install -y \
                 ca-certificates \

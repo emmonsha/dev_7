@@ -18,12 +18,13 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == manager01]
+      # endpoint_mode: dnsrr
       # resources:
       #   limits:
       #     cpus: '0.25'
       #     memory: 1GB
     environment:
-      - POSTGRES_HOST=devops7_database
+      - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=master
@@ -31,7 +32,6 @@ services:
     expose: 
       - "8081"
     networks:
-      - dev7_public
       - dev7_internal
   
   # worker01
@@ -46,22 +46,21 @@ services:
       #     cpus: '0.25'
       #     memory: 2GB
     environment:
-      - SESSION_SERVICE_HOST=devops7_session-service
+      - SESSION_SERVICE_HOST=session-service
       - SESSION_SERVICE_PORT=8081
-      - HOTEL_SERVICE_HOST=devops7_hotel-service
+      - HOTEL_SERVICE_HOST=hotel-service
       - HOTEL_SERVICE_PORT=8082
-      - BOOKING_SERVICE_HOST=devops7_booking-service
+      - BOOKING_SERVICE_HOST=booking-service
       - BOOKING_SERVICE_PORT=8083
-      - PAYMENT_SERVICE_HOST=devops7_payment-service
+      - PAYMENT_SERVICE_HOST=payment-service
       - PAYMENT_SERVICE_PORT=8084
-      - LOYALTY_SERVICE_HOST=devops7_loyalty-service
+      - LOYALTY_SERVICE_HOST=loyalty-service
       - LOYALTY_SERVICE_PORT=8085
-      - REPORT_SERVICE_HOST=devops7_report-service
+      - REPORT_SERVICE_HOST=report-service
       - REPORT_SERVICE_PORT=8086
     expose:
       - "8087"
     networks:
-      - dev7_public
       - dev7_internal
    
   payment-service:
@@ -74,7 +73,7 @@ services:
       #     cpus: '1'
       #     memory: 1GB
     environment:
-      - POSTGRES_HOST=devops7_database
+      - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=master
@@ -109,13 +108,13 @@ services:
     image: pavelignatiev/emmonsha-hotel-dev7:latest
     deploy:
       placement:
-        constraints: [node.hostnme == worker02]
+        constraints: [node.hostname == worker02]
       # resources:
       #   limits:
       #     cpus: '1'
       #     memory: 1GB
     environment:
-      - POSTGRES_HOST=devops7_database
+      - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=master
@@ -129,13 +128,13 @@ services:
     image: pavelignatiev/emmonsha-loyalty-dev7:latest
     deploy:
       placement:
-        constraints: [node.hostnme == worker02]
+        constraints: [node.hostname == worker02]
       # resources:
       #   limits:
       #     cpus: '0.5'
       #     memory: 1GB
     environment:
-      - POSTGRES_HOST=devops7_database
+      - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=master
@@ -149,18 +148,18 @@ services:
     image: pavelignatiev/emmonsha-report-dev7:latest
     deploy:
       placement:
-        constraints: [node.hostnme == worker02]
+        constraints: [node.hostname == worker02]
       # resources:
       #   limits:
       #     cpus: '0.5'
       #     memory: 1GB
     environment:
-      - POSTGRES_HOST=devops7_database
+      - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=master
       - POSTGRES_DB=statistics_db
-      - RABBIT_MQ_HOST=devops7_rabbitmq
+      - RABBIT_MQ_HOST=rabbitmq
       - RABBIT_MQ_PORT=5672
       - RABBIT_MQ_USER=postgres
       - RABBIT_MQ_PASSWORD=master
@@ -181,28 +180,49 @@ services:
       #     cpus: '2' 
       #     memory: 1GB
     environment:
-      - POSTGRES_HOST=devops7_database
+      - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=master
       - POSTGRES_DB=reservations_db
-      - RABBIT_MQ_HOST=devops7_rabbitmq
+      - RABBIT_MQ_HOST=rabbitmq
       - RABBIT_MQ_PORT=5672
       - RABBIT_MQ_USER=postgres
       - RABBIT_MQ_PASSWORD=master
       - RABBIT_MQ_QUEUE_NAME=messagequeue
       - RABBIT_MQ_EXCHANGE=messagequeue-exchange
-      - HOTEL_SERVICE_HOST=devops7_hotel-service
+      - HOTEL_SERVICE_HOST=hotel-service
       - HOTEL_SERVICE_PORT=8082
-      - PAYMENT_SERVICE_HOST=devops7_payment-service
+      - PAYMENT_SERVICE_HOST=payment-service
       - PAYMENT_SERVICE_PORT=8084
-      - LOYALTY_SERVICE_HOST=devops7_loyalty-service
+      - LOYALTY_SERVICE_HOST=loyalty-service
       - LOYALTY_SERVICE_PORT=8085
     expose:
       - "8083"
     networks:
       - dev7_internal
 
+  nginx-proxy:
+    image: nginx:alpine
+    command: ["nginx", "-g", "daemon off;"]
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    deploy:
+      placement:
+        constraints: [node.hostname == manager01]
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - dev7_public
+      - dev7_internal
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
 
 volumes:
   postgres_data:
@@ -214,3 +234,4 @@ networks:
   dev7_internal:
     driver: overlay
     internal: true
+    attachable: true
