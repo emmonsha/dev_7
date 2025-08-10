@@ -1185,7 +1185,7 @@ portainer_agent и portainer_portainer запущены. </br>
 Смотрю стеки
 ![swarm-deploy](./images/part3/7_portainer/Portainer_stack.png) </br>
 
-Распределение контейнеров по нодам
+Распределение контейнеров по нодам </br>
 manager01
 </br>
 
