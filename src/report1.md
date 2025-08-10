@@ -661,10 +661,91 @@ docker ps
 
 ## Part 2. Создание виртуальных машин
 
-Пришло время заготовить основу для будущих узлов кластера. Создадим виртуальную машину.
-
 ### Задание 
 
 1) Установи и инициализируй Vagrant в корне проекта. Напиши Vagrantfile для одной виртуальной машины. Перенеси исходный код веб-сервиса в рабочую директорию виртуальной машины. Помощь по vagrant ты найдешь в материалах.
 
+ устанавливаю утилиту Vagrant
+
+можно скачать и запустить файл установки  </br>
+![vagrant-test](./images/part2/download_vagrant.png) </br>
+
+или командой 
+```
+brew tap hashicorp/tap
+brew install hashicorp/tap/hashicorp-vagrant
+```
+для Linux команда другая.
+
+проверяю установку утилиты командой 
+`vagrant --version` </br>
+![vagrant-test](./images/part2/vagrant_version.png) </br>
+
+устанавливаю небходимое окружение для работы с vagrant </br>
+![vagrant-test](./images/part2/install_qemu.png) </br>
+![vagrant-test](./images/part2/vagrant_plugin_install.png) </br>
+
+В корне проекта инициализирую vagrant командой 
+vagrant init с указание образ который буду использовать для создания виртуальной машины.
+
+```
+vagrant init hashicorp-education/ubuntu-24-04 --box-version 0.1.0
+```
+![vagrant-test](./images/part2/vagrant_init.png) </br>
+
+Запускаю установку командой 
+ </br>`vagrant up` </br>
+
+![vagrant-test](./images/part2/vagrant_up_start.png)
+![vagrant-test](./images/part2/vagrant_up_end.png)
+
+проверяю появилась ли машина
+</br>`VBoxmanage listvms` </br>
+
+![vagrant-test](./images/part2/VBox_listvms.png)
+
+
 2) Зайди через консоль внутрь виртуальной машины и удостоверься, что исходный код встал, куда нужно. Останови и уничтожь виртуальную машину.
+
+Загружаю файлы в виртуальную машину командой 
+</br>
+`vagrant upload services services`  </br>
+
+![vagrant-test](./images/part2/vagrant_upload.png)
+
+Захожу в машину и проверяю наличие файлов командой 
+```
+ls 
+tree
+```
+![vagrant-test](./images/part2/check_files_inside.png)
+
+Вижу, что файлы успешно загрузились и выхожу из машины.
+Останавливаю и удаляю машину
+
+```
+vagrant halt
+vagrant destroy
+```
+![vagrant-test](./images/part2/logout_halt_destroy.png)
+
+
+
+
+## Part 3. Создание простейшего Docker Swarm
+
+### Задание
+
+1) Модифицируй Vagrantfile для создания трех машин: manager01, worker01, worker02. Напиши shell-скрипты для установки Docker внутрь машин, инициализации и подключения к Docker Swarm. Помощь с Docker Swarm ты найдешь в материалах.
+
+2) Загрузи собранные образы на Docker Hub и модифицируй Docker Compose файл для подгрузки расположенных на Docker Hub образов.
+
+3) Подними виртуальные машины и перенеси на менеджер Docker Compose файл. Запусти стек сервисов, используя написанный Docker Compose файл.
+
+4) Настрой прокси на базе nginx для доступа к gateway service и session service по оверлейной сети. Сами gateway service и session service сделай недоступными напрямую.
+
+5) Прогони заготовленные тесты через Postman и удостоверься, что все они проходят успешно. В отчете отобрази результаты тестирования.
+
+6) Используя команды Docker, отобрази в отчете распределение контейнеров по узлам.
+
+7) Установи отдельным стеком Portainer внутри кластера. В отчете отобрази визуализацию распределения задач по узлам с помощью Portainer.
