@@ -636,7 +636,7 @@ docker ps
 В папке src лежит файл `application_tests.postman_collection.json`
 Он нужен для проведения тестов
 После регистрации в Postman, вхожу в панель тестирования, импортирую файл с тестами </br>
-![test-service](./images/part1/test/import_tests.png) </br>
+![test-service](./images/part1/test-service/import_tests.png) </br>
 Красным обозначена кнопка импорта, синим импортированные тесты. </br>
 
 Провожу тестирование:
